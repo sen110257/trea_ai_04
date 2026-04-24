@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, watch } from 'vue'
 import ChatHeader from './components/ChatHeader.vue'
 import ChatMessageList from './components/ChatMessageList.vue'
 import ChatInput from './components/ChatInput.vue'
@@ -16,9 +16,9 @@ const goToChat = (friend) => {
   currentFriend.value = friend
   currentView.value = 'chat'
   messages.value = [
-    { id: 1, sender: 'other', type: 'text', content: '你好，最近怎么样？', time: '10:30', avatar: friend.avatar },
-    { id: 2, sender: 'me', type: 'text', content: '我很好，你呢？', time: '10:31', avatar: 'Me' },
-    { id: 3, sender: 'other', type: 'text', content: '我也很好，最近工作忙吗？', time: '10:32', avatar: friend.avatar },
+    { id: 1, sender: 'other', type: 'text', content: '你好，最近怎么样？', time: '10:30', avatar: friend.avatar, isNew: false, status: 'success' },
+    { id: 2, sender: 'me', type: 'text', content: '我很好，你呢？', time: '10:31', avatar: 'Me', isNew: false, status: 'success' },
+    { id: 3, sender: 'other', type: 'text', content: '我也很好，最近工作忙吗？', time: '10:32', avatar: friend.avatar, isNew: false, status: 'success' },
   ]
 }
 
@@ -47,7 +47,9 @@ const handleSendMessage = (message) => {
         type: 'text',
         content: replies[Math.floor(Math.random() * replies.length)],
         time: getCurrentTime(),
-        avatar: currentFriend.value?.avatar || 'A'
+        avatar: currentFriend.value?.avatar || 'A',
+        isNew: true,
+        status: 'success'
       }
       messages.value.push(reply)
     }, 1000 + Math.random() * 1500)
@@ -66,6 +68,10 @@ const handleInputFocus = () => {
     messageListRef.value?.scrollToBottom?.()
   }, 100)
 }
+
+const handleRetryMessage = (msg) => {
+  console.log('重试消息:', msg)
+}
 </script>
 
 <template>
@@ -83,7 +89,8 @@ const handleInputFocus = () => {
       />
       <ChatMessageList 
         ref="messageListRef"
-        :messages="messages" 
+        :messages="messages"
+        @retry-message="handleRetryMessage"
       />
       <ChatInput 
         @send-message="handleSendMessage"
@@ -108,7 +115,9 @@ html, body, #app {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f5f5f5;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .app-container {
@@ -116,16 +125,39 @@ body {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  background-color: #fff;
+  background: #ffffff;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
 }
 
 .chat-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding-top: 50px;
+  padding-top: 56px;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+::selection {
+  background: rgba(99, 102, 241, 0.15);
+  color: #1e293b;
 }
 </style>
