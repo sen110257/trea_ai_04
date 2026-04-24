@@ -1,17 +1,23 @@
 <template>
   <div class="friend-list">
     <div class="list-header">
-      <input 
-        v-model="searchText" 
-        type="text" 
-        placeholder="搜索联系人" 
-        class="search-input"
-      />
+      <div class="search-wrapper">
+        <el-icon class="search-icon"><Search /></el-icon>
+        <input 
+          v-model="searchText" 
+          type="text" 
+          placeholder="搜索联系人" 
+          class="search-input"
+        />
+      </div>
     </div>
     
     <div class="list-content" ref="listContentRef">
       <div class="quick-friends" v-if="quickFriends.length > 0">
-        <div class="section-title">常用联系人</div>
+        <div class="section-title">
+          <span class="title-icon">📌</span>
+          常用联系人
+        </div>
         <div 
           v-for="friend in quickFriends" 
           :key="friend.id" 
@@ -19,12 +25,17 @@
           @click="selectFriend(friend)"
         >
           <div class="friend-avatar">
-            <div class="avatar">{{ friend.avatar }}</div>
+            <div class="avatar">
+              {{ friend.avatar }}
+              <span class="unread-dot" v-if="friend.unread > 0"></span>
+            </div>
           </div>
           <div class="friend-info">
             <div class="friend-name">
-              <span>{{ friend.name }}</span>
-              <span class="unread-badge" v-if="friend.unread > 0">{{ friend.unread }}</span>
+              <span class="name-text">{{ friend.name }}</span>
+              <span class="unread-badge" v-if="friend.unread > 0">
+                {{ friend.unread > 99 ? '99+' : friend.unread }}
+              </span>
             </div>
             <div class="friend-last-message">{{ friend.lastMessage }}</div>
           </div>
@@ -46,12 +57,17 @@
           @click="selectFriend(friend)"
         >
           <div class="friend-avatar">
-            <div class="avatar">{{ friend.avatar }}</div>
+            <div class="avatar">
+              {{ friend.avatar }}
+              <span class="unread-dot" v-if="friend.unread > 0"></span>
+            </div>
           </div>
           <div class="friend-info">
             <div class="friend-name">
-              <span>{{ friend.name }}</span>
-              <span class="unread-badge" v-if="friend.unread > 0">{{ friend.unread }}</span>
+              <span class="name-text">{{ friend.name }}</span>
+              <span class="unread-badge" v-if="friend.unread > 0">
+                {{ friend.unread > 99 ? '99+' : friend.unread }}
+              </span>
             </div>
             <div class="friend-last-message">{{ friend.lastMessage }}</div>
           </div>
@@ -65,6 +81,7 @@
         v-for="letter in indexLetters" 
         :key="letter" 
         class="index-item"
+        :class="{ 'index-active': activeIndex === letter }"
         @click="scrollToGroup(letter)"
         @touchstart="onIndexTouchStart($event, letter)"
         @touchmove="onIndexTouchMove"
@@ -73,11 +90,16 @@
         {{ letter }}
       </div>
     </div>
+    
+    <div class="index-toast" v-if="showIndexToast">
+      {{ activeIndex }}
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { Search } from '@element-plus/icons-vue'
 import { friends } from '../data/mockData.js'
 
 const emit = defineEmits(['selectFriend'])
@@ -85,6 +107,8 @@ const emit = defineEmits(['selectFriend'])
 const searchText = ref('')
 const listContentRef = ref(null)
 const currentTouchLetter = ref(null)
+const activeIndex = ref('')
+const showIndexToast = ref(false)
 
 const allFriends = ref([...friends])
 
@@ -141,9 +165,15 @@ const selectFriend = (friend) => {
 }
 
 const scrollToGroup = (letter) => {
+  activeIndex.value = letter
+  showIndexToast.value = true
+  setTimeout(() => {
+    showIndexToast.value = false
+  }, 500)
+  
   const groupElement = document.getElementById('group-' + letter)
   if (groupElement) {
-    groupElement.scrollIntoView({ behavior: 'smooth' })
+    groupElement.scrollIntoView({ behavior: 'auto' })
   }
 }
 
@@ -170,6 +200,7 @@ const onIndexTouchMove = (e) => {
 
 const onIndexTouchEnd = () => {
   currentTouchLetter.value = null
+  showIndexToast.value = false
 }
 
 onMounted(() => {
@@ -182,78 +213,170 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #fff;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   position: relative;
 }
 
 .list-header {
-  padding: 10px 15px;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid #e5e5e5;
+  padding: 16px 16px 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  z-index: 10;
+}
+
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 10px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.search-wrapper:focus-within {
+  background: #ffffff;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.search-icon {
+  color: #94a3b8;
+  margin-right: 10px;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.search-wrapper:focus-within .search-icon {
+  color: #6366f1;
 }
 
 .search-input {
-  width: 100%;
-  height: 36px;
-  padding: 0 15px;
+  flex: 1;
   border: none;
-  border-radius: 18px;
-  background-color: #e5e5e5;
-  font-size: 14px;
   outline: none;
+  background: transparent;
+  font-size: 15px;
+  color: #1e293b;
+  placeholder: #94a3b8;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
 }
 
 .list-content {
   flex: 1;
   overflow-y: auto;
-  padding-right: 25px;
+  padding-right: 28px;
+  background: transparent;
 }
 
 .quick-friends {
-  background-color: #fff;
+  background: #ffffff;
+  margin: 12px 12px 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
 }
 
 .section-title {
   position: sticky;
   top: 0;
   z-index: 10;
-  padding: 5px 15px;
-  background-color: #f5f5f5;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
   font-size: 12px;
-  color: #999;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.title-icon {
+  margin-right: 6px;
+  font-size: 14px;
 }
 
 .friend-group {
-  background-color: #fff;
+  background: #ffffff;
+  margin: 12px 12px 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
 }
 
 .friend-item {
   display: flex;
   align-items: center;
-  padding: 12px 15px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 14px 16px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.friend-item:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.friend-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s ease;
 }
 
 .friend-item:active {
-  background-color: #f5f5f5;
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.friend-item:active::before {
+  transform: scaleX(1);
 }
 
 .friend-avatar {
-  margin-right: 12px;
+  margin-right: 14px;
+  position: relative;
 }
 
 .avatar {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
-  background-color: #409eff;
+  width: 50px;
+  height: 50px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.friend-item:active .avatar {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+.unread-dot {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: #ef4444;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
 }
 
 .friend-info {
@@ -264,61 +387,123 @@ onMounted(() => {
 .friend-name {
   display: flex;
   align-items: center;
-  font-size: 16px;
-  color: #333;
   margin-bottom: 4px;
+}
+
+.name-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: 0.3px;
 }
 
 .unread-badge {
   margin-left: 8px;
-  padding: 1px 6px;
-  background-color: #ff4d4f;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   color: white;
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 700;
   border-radius: 10px;
-  min-width: 18px;
+  min-width: 20px;
   text-align: center;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+  animation: pulse-badge 2s ease-in-out infinite;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  }
 }
 
 .friend-last-message {
   font-size: 13px;
-  color: #999;
+  color: #64748b;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 .friend-time {
   font-size: 12px;
-  color: #ccc;
-  margin-left: 10px;
+  color: #94a3b8;
+  margin-left: 12px;
+  font-weight: 500;
 }
 
 .index-bar {
   position: fixed;
-  right: 5px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   z-index: 20;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 6px 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .index-item {
-  width: 20px;
-  height: 18px;
+  width: 24px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
-  color: #666;
+  font-weight: 600;
+  color: #64748b;
   cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-.index-item:active {
-  background-color: #409eff;
+.index-item:active,
+.index-item.index-active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
-  border-radius: 50%;
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+}
+
+.index-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+  color: white;
+  z-index: 100;
+  animation: toast-in 0.2s ease;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 </style>
