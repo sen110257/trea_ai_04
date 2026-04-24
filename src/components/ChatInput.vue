@@ -26,7 +26,7 @@
         </div>
       </div>
       <div class="toolbar-btn" @click="toggleEmojiPanel" v-show="!isVoiceMode">
-        <el-icon><Smile /></el-icon>
+        <el-icon><ChatRound /></el-icon>
       </div>
       <div class="toolbar-btn" @click="toggleMorePanel" v-show="!isVoiceMode && !inputText">
         <el-icon><Plus /></el-icon>
@@ -114,7 +114,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { Microphone, Edit, Smile, Plus, Picture, VideoCamera, Document } from '@element-plus/icons-vue'
+import { Microphone, Edit, ChatRound, Plus, Picture, VideoCamera, Document } from '@element-plus/icons-vue'
 import { emojis } from '../data/mockData.js'
 
 const emit = defineEmits(['sendMessage', 'focus'])
